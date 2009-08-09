@@ -22,13 +22,22 @@
 #include <math.h>
 #include <stdlib.h>
 
-inline void add_grad(int i, int j, double s, double *cor, double *gradient) {
+inline void add_grad(int i, int j, double s, double *delta, double *gradient) {
+/*
   gradient[i*3  ] += s*(cor[i*3  ]-cor[j*3  ]);
   gradient[j*3  ] -= s*(cor[i*3  ]-cor[j*3  ]);
   gradient[i*3+1] += s*(cor[i*3+1]-cor[j*3+1]);
   gradient[j*3+1] -= s*(cor[i*3+1]-cor[j*3+1]);
   gradient[i*3+2] += s*(cor[i*3+2]-cor[j*3+2]);
   gradient[j*3+2] -= s*(cor[i*3+2]-cor[j*3+2]);
+*/
+
+  gradient[i*3  ] += s*(delta[0]);
+  gradient[j*3  ] -= s*(delta[0]);
+  gradient[i*3+1] += s*(delta[1]);
+  gradient[j*3+1] -= s*(delta[1]);
+  gradient[i*3+2] += s*(delta[2]);
+  gradient[j*3+2] -= s*(delta[2]);
 
 }
 
@@ -74,7 +83,7 @@ double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, doub
         if (gradient!=NULL) {
           //tmp = 2*amp*tmp/d0*radii[i]*radii[j]/d;
           tmp = 2*amp*k*tmp/d;
-          add_grad(i, j, tmp, cor, gradient);
+          add_grad(i, j, tmp, delta, gradient);
         }
         //result += tmp*tmp;
       }
@@ -111,7 +120,7 @@ double ff_dm_reci(int n, double *radii, double *cor, int *dm0, double amp, doubl
             result += amp*(d-1)*(d-1)/d/d0;
             if (gradient!=NULL) {
               tmp = amp*(1-1/d/d)/r0/d/d0;
-              add_grad(i, j, tmp, cor, gradient);
+              add_grad(i, j, tmp, delta, gradient);
             }
         }
       }
@@ -145,7 +154,7 @@ double ff_bond_quad(int m, int n, double *cor, int *pairs, double *lengths, doub
     result += amp*tmp*tmp;
     if (gradient!=NULL) {
       tmp = 2*amp*tmp/d;
-      add_grad(i, j, tmp, cor, gradient);
+      add_grad(i, j, tmp, delta, gradient);
     }
     //printf("result=%f\n", result);
   }
@@ -175,7 +184,7 @@ double ff_bond_hyper(int m, int n, double *cor, int *pairs, double *lengths, dou
     result += amp*(cosh(scale*tmp)-1);
     if (gradient!=NULL) {
       tmp = amp*scale*sinh(scale*tmp)/d;
-      add_grad(i, j, tmp, cor, gradient);
+      add_grad(i, j, tmp, delta, gradient);
     }
   }
   return result;
