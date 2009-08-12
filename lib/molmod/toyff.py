@@ -22,6 +22,7 @@
 from molmod import context
 from molmod.molecules import Molecule
 from molmod.data.periodic import periodic
+from molmod.units import angstrom
 
 from molmod.ext import ff_dm_quad, ff_dm_reci, ff_bond_quad, ff_bond_hyper
 
@@ -129,6 +130,13 @@ class ToyFF(object):
     def __init__(self, graph):
         from molmod.data.bonds import bonds
 
+        self.unitcell = numpy.array([
+            [10.0,  0.0,  0.0],
+            [ 0.0, 10.0,  0.0],
+            [ 0.0,  0.0, 10.0]]
+        )*angstrom
+        
+
         self.dm = graph.distances.astype(numpy.int32)
         dm = self.dm.astype(float)
         self.dm0 = dm**2
@@ -205,15 +213,15 @@ class ToyFF(object):
 
         gradient = numpy.zeros(x.shape, float)
         if self.dm_quad > 0.0:
-            result += ff_dm_quad(x, self.dm0, self.dmk, self.dm_quad, gradient)
+            result += ff_dm_quad(x, self.dm0, self.dmk, self.dm_quad, self.unitcell, gradient)
         if self.dm_reci:
-            result += ff_dm_reci(1.0*self.vdw_radii, x, self.dm, self.dm_reci, gradient)
+            result += ff_dm_reci(1.0*self.vdw_radii, x, self.dm, self.dm_reci, self.unitcell, gradient)
         if self.bond_quad:
-            result += ff_bond_quad(x, self.bond_pairs, self.bond_lengths, self.bond_quad, gradient)
+            result += ff_bond_quad(x, self.bond_pairs, self.bond_lengths, self.bond_quad, self.unitcell, gradient)
         if self.span_quad:
-            result += ff_bond_quad(x, self.span_pairs, self.span_lengths, self.span_quad, gradient)
+            result += ff_bond_quad(x, self.span_pairs, self.span_lengths, self.span_quad, self.unitcell, gradient)
         if self.bond_hyper:
-            result += ff_bond_hyper(x, self.bond_pairs, self.bond_lengths, 5.0, self.bond_hyper, gradient)
+            result += ff_bond_hyper(x, self.bond_pairs, self.bond_lengths, 5.0, self.bond_hyper, self.unitcell, gradient)
 
         if do_gradient:
             return result, gradient.ravel()

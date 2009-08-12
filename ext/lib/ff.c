@@ -23,15 +23,6 @@
 #include <stdlib.h>
 
 inline void add_grad(int i, int j, double s, double *delta, double *gradient) {
-/*
-  gradient[i*3  ] += s*(cor[i*3  ]-cor[j*3  ]);
-  gradient[j*3  ] -= s*(cor[i*3  ]-cor[j*3  ]);
-  gradient[i*3+1] += s*(cor[i*3+1]-cor[j*3+1]);
-  gradient[j*3+1] -= s*(cor[i*3+1]-cor[j*3+1]);
-  gradient[i*3+2] += s*(cor[i*3+2]-cor[j*3+2]);
-  gradient[j*3+2] -= s*(cor[i*3+2]-cor[j*3+2]);
-*/
-
   gradient[i*3  ] += s*(delta[0]);
   gradient[j*3  ] -= s*(delta[0]);
   gradient[i*3+1] += s*(delta[1]);
@@ -52,7 +43,7 @@ inline void calc_delta(double *i, double *j, double *delta)
     *(delta+2) = *(i+2)-*(j+2);
 }
 
-double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, double *gradient) {
+double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, double *unitcell, double *gradient) {
   int i,j;
   double d, d0, k, tmp, result;
   double delta[3];
@@ -95,7 +86,7 @@ double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, doub
 }
 
 
-double ff_dm_reci(int n, double *radii, double *cor, int *dm0, double amp, double *gradient) {
+double ff_dm_reci(int n, double *radii, double *cor, int *dm0, double amp, double *unitcell, double *gradient) {
   int i,j,d0,r0;
   double d, tmp, result;
   double delta[3];
@@ -130,7 +121,7 @@ double ff_dm_reci(int n, double *radii, double *cor, int *dm0, double amp, doubl
 }
 
 
-double ff_bond_quad(int m, int n, double *cor, int *pairs, double *lengths, double amp, double *gradient) {
+double ff_bond_quad(int m, int n, double *cor, int *pairs, double *lengths, double amp, double *unitcell, double *gradient) {
   int b, i, j;
   double result, d, tmp;
   double delta[3];
@@ -161,7 +152,7 @@ double ff_bond_quad(int m, int n, double *cor, int *pairs, double *lengths, doub
   return result;
 }
 
-double ff_bond_hyper(int m, int n, double *cor, int *pairs, double *lengths, double scale, double amp, double *gradient) {
+double ff_bond_hyper(int m, int n, double *cor, int *pairs, double *lengths, double scale, double amp, double *unitcell, double *gradient) {
   int b, i, j;
   double result, d, tmp;
   double delta[3];
