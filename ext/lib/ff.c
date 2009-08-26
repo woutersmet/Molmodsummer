@@ -29,25 +29,49 @@ inline void add_grad(int i, int j, double s, double *delta, double *gradient) {
   gradient[j*3+1] -= s*(delta[1]);
   gradient[i*3+2] += s*(delta[2]);
   gradient[j*3+2] -= s*(delta[2]);
-
 }
 
-//should do the C equivalent of         
+//should do the C equivalent of
 //return delta - self.to_cartesian(self.to_fractional(delta).round())
 //(but writing straight to memory)
 //takes locations of start and end point coordinate arrays (i and j) and location to write shortest vector array
 inline void calc_delta(double *i, double *j, double *delta)
 {
+    double unit_cell[] = {1,0,2,0,2,0,4,0,1};
+    double d[3];
+    double f[3];
+
     *delta = *i-*j;
     *(delta+1) = *(i+1)-*(j+1);
     *(delta+2) = *(i+2)-*(j+2);
+
+    d[0] = *(delta);
+    d[1] = *(delta+1);
+    d[2] = *(delta+2);
+
+    //to fractional coordinates
+    int k,l;
+    for(k=0;k<3;k++)
+    {
+        for(l=0;l<3;l++)
+        {
+            f[k] += d[l]*unit_cell[k+l];
+        }
+    }
+
+    for(k=0;k<3;k++)
+    {
+        f[k] = round(f[k]);
+    }
+
+    //printf("after: %f %f %f \n",f[0],f[1],f[2]);
 }
 
 double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, double *unitcell, double *gradient) {
   int i,j;
   double d, d0, k, tmp, result;
   double delta[3];
-  
+
   result = 0.0;
   //printf("n=%i\n", n);
   for (i=0; i<n; i++) {
@@ -56,7 +80,7 @@ double ff_dm_quad(int n, double *cor, double *dm0, double *dmk, double amp, doub
       k = dmk[i*n+j];
       //printf("i=%i  j=%i  d0=%i\n", i,j,d0);
       if (d0>0) {
-        calc_delta(cor+3*i, cor+3*j, delta); 
+        calc_delta(cor+3*i, cor+3*j, delta);
 
         tmp = delta[0];
         d = tmp*tmp;
@@ -90,13 +114,13 @@ double ff_dm_reci(int n, double *radii, double *cor, int *dm0, double amp, doubl
   int i,j,d0,r0;
   double d, tmp, result;
   double delta[3];
-  
+
   result = 0.0;
   for (i=0; i<n; i++) {
     for (j=0; j<i; j++) {
       d0 = dm0[i*n+j];
       if (d0>1) {
-        calc_delta(cor+3*i, cor+3*j, delta); 
+        calc_delta(cor+3*i, cor+3*j, delta);
 
         tmp = delta[0];
         d = tmp*tmp;
@@ -125,13 +149,13 @@ double ff_bond_quad(int m, int n, double *cor, int *pairs, double *lengths, doub
   int b, i, j;
   double result, d, tmp;
   double delta[3];
-  
+
   result = 0.0;
   //printf("m=%i\n", m);
   for (b=0; b<m; b++) {
     i = pairs[2*b  ];
     j = pairs[2*b+1];
-        calc_delta(cor+3*i, cor+3*j, delta); 
+        calc_delta(cor+3*i, cor+3*j, delta);
 
         tmp = delta[0];
         d = tmp*tmp;
@@ -156,12 +180,12 @@ double ff_bond_hyper(int m, int n, double *cor, int *pairs, double *lengths, dou
   int b, i, j;
   double result, d, tmp;
   double delta[3];
-  
+
   result = 0.0;
   for (b=0; b<m; b++) {
     i = pairs[2*b  ];
     j = pairs[2*b+1];
-    calc_delta(cor+3*i, cor+3*j, delta); 
+    calc_delta(cor+3*i, cor+3*j, delta);
 
     tmp = delta[0];
     d = tmp*tmp;

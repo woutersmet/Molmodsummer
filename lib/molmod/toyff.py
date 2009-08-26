@@ -127,17 +127,20 @@ class ToyFF(object):
        See guess_geomtry and tune_geomtry for two practical use cases.
     """
 
-    def __init__(self, graph):
+    def __init__(self, graph, unitcell = False):
         from molmod.data.bonds import bonds
 
-        self.unitcell = numpy.array([
-            [10.0,  0.0,  0.0],
-            [ 0.0, 10.0,  0.0],
-            [ 0.0,  0.0, 10.0]]
-        )*angstrom
-        
+        if unitcell:
+            self.unitcell = unitcell
+        else:
+            self.unitcell = numpy.array([
+                [10.0,  0.0,  0.0],
+                [ 0.0, 10.0,  0.0],
+                [ 0.0,  0.0, 10.0]]
+            )*angstrom
 
         self.dm = graph.distances.astype(numpy.int32)
+        # print self.dm
         dm = self.dm.astype(float)
         self.dm0 = dm**2
         self.dmk = dm**(-3)
