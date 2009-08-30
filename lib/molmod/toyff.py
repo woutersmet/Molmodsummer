@@ -32,7 +32,7 @@ import numpy
 __all__ = ["guess_geometry", "tune_geometry", "ToyFF"]
 
 
-def guess_geometry(graph):
+def guess_geometry(graph, unitcell_active, unitcell, unitcell_reciproke):
     """Construct a molecular geometry based on a molecular graph.
 
        This routine does not require initial coordinates and will give a very
@@ -47,7 +47,7 @@ def guess_geometry(graph):
     N = len(graph.numbers)
     from molmod.minimizer import Minimizer, NewtonGLineSearch
 
-    ff = ToyFF(graph)
+    ff = ToyFF(graph, unitcell_active, unitcell, unitcell_reciproke)
     x_init = numpy.random.normal(0,1,N*3)
 
     #  level 1 geometry optimization: graph based
@@ -127,17 +127,31 @@ class ToyFF(object):
        See guess_geomtry and tune_geomtry for two practical use cases.
     """
 
-    def __init__(self, graph, unitcell = False):
+    def __init__(self, graph, unitcell_active = None, unitcell = None, unitcell_reciproke = None):
         from molmod.data.bonds import bonds
 
-        if unitcell:
+        if unitcell_active is not None:
             self.unitcell = unitcell
-        else:
+            self.unitcell_active = unitcell_active
+            self.unitcell_reciproke = unitcell_reciproke
+        else: #can you set default args in a C function?
             self.unitcell = numpy.array([
                 [10.0,  0.0,  0.0],
                 [ 0.0, 10.0,  0.0],
                 [ 0.0,  0.0, 10.0]]
             )*angstrom
+            self.unitcell_reciproke = numpy.array([
+                [10.0,  0.0,  0.0],
+                [ 0.0, 10.0,  0.0],
+                [ 0.0,  0.0, 10.0]]
+            )*angstrom
+
+            self.unitcell_active = [False, False, False]
+
+        print "unit cell using:"
+        print self.unitcell
+        print "Active directions:"
+        print self.unitcell_active
 
         self.dm = graph.distances.astype(numpy.int32)
         # print self.dm
@@ -216,15 +230,15 @@ class ToyFF(object):
 
         gradient = numpy.zeros(x.shape, float)
         if self.dm_quad > 0.0:
-            result += ff_dm_quad(x, self.dm0, self.dmk, self.dm_quad, self.unitcell, gradient)
+            result += ff_dm_quad(x, self.dm0, self.dmk, self.dm_quad, self.unitcell, self.unitcell_reciproke, self.unitcell_active, gradient)
         if self.dm_reci:
-            result += ff_dm_reci(1.0*self.vdw_radii, x, self.dm, self.dm_reci, self.unitcell, gradient)
+            result += ff_dm_reci(1.0*self.vdw_radii, x, self.dm, self.dm_reci, self.unitcell, self.unitcell_reciproke, self.unitcell_active, gradient)
         if self.bond_quad:
-            result += ff_bond_quad(x, self.bond_pairs, self.bond_lengths, self.bond_quad, self.unitcell, gradient)
+            result += ff_bond_quad(x, self.bond_pairs, self.bond_lengths, self.bond_quad, self.unitcell, self.unitcell_reciproke, self.unitcell_active, gradient)
         if self.span_quad:
-            result += ff_bond_quad(x, self.span_pairs, self.span_lengths, self.span_quad, self.unitcell, gradient)
+            result += ff_bond_quad(x, self.span_pairs, self.span_lengths, self.span_quad, self.unitcell, self.unitcell_reciproke, self.unitcell_active, gradient)
         if self.bond_hyper:
-            result += ff_bond_hyper(x, self.bond_pairs, self.bond_lengths, 5.0, self.bond_hyper, self.unitcell, gradient)
+            result += ff_bond_hyper(x, self.bond_pairs, self.bond_lengths, 5.0, self.bond_hyper, self.unitcell, self.unitcell_reciproke, self.unitcell_active, gradient)
 
         if do_gradient:
             return result, gradient.ravel()

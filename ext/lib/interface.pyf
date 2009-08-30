@@ -26,7 +26,7 @@ interface
 !!  ff.c
 !!
 
-  double precision function ff_dm_quad(n,cor,dm0,dmk,amp,unitcell,gradient)
+  double precision function ff_dm_quad(n,cor,dm0,dmk,amp,unitcell,unitcell_reciproke,unitcell_active,gradient)
     intent(c) ff_dm_quad
     intent(c)
     integer intent(hide), depend(cor) :: n=len(cor)
@@ -35,10 +35,12 @@ interface
     double precision intent(in) :: dmk(n,n)
     double precision intent(in) :: amp
     double precision intent(in) :: unitcell(3,3)
+    double precision intent(in) :: unitcell_reciproke(3,3)
+    integer intent(in) :: unitcell_active(3)
     double precision intent(inout) :: gradient(n,3)
   end function ff_dm_quad
 
-  double precision function ff_dm_reci(n,radii,cor,dm0,amp,unitcell,gradient)
+  double precision function ff_dm_reci(n,radii,cor,dm0,amp,unitcell,unitcell_reciproke, unitcell_active,gradient)
     intent(c) ff_dm_reci
     intent(c)
     integer intent(hide), depend(cor) :: n=len(cor)
@@ -47,10 +49,12 @@ interface
     integer intent(in) :: dm0(n,n)
     double precision intent(in) :: amp
     double precision intent(in) :: unitcell(3,3)
+    double precision intent(in) :: unitcell_reciproke(3,3)
+    integer intent(in) :: unitcell_active(3)
     double precision intent(inout) :: gradient(n,3)
   end function ff_dm_reci
 
-  double precision function ff_bond_quad(m,n,cor,pairs,lengths,amp,unitcell,gradient)
+  double precision function ff_bond_quad(m,n,cor,pairs,lengths,amp,unitcell,unitcell_reciproke,unitcell_active,gradient)
     intent(c) ff_bond_quad
     intent(c)
     integer intent(hide), depend(pairs) :: m=len(pairs)
@@ -60,10 +64,12 @@ interface
     double precision intent(in) :: lengths(m)
     double precision intent(in) :: amp
     double precision intent(in) :: unitcell(3,3)
+    double precision intent(in) :: unitcell_reciproke(3,3)
+    integer intent(in) :: unitcell_active(3)
     double precision intent(inout) :: gradient(n,3)
   end function ff_bond_quad
 
-  double precision function ff_bond_hyper(m,n,cor,pairs,lengths,scale,amp,unitcell,gradient)
+  double precision function ff_bond_hyper(m,n,cor,pairs,lengths,scale,amp,unitcell,unitcell_reciproke,unitcell_active,gradient)
     intent(c) ff_bond_hyper
     intent(c)
     integer intent(hide), depend(pairs) :: m=len(pairs)
@@ -74,6 +80,8 @@ interface
     double precision intent(in) :: scale
     double precision intent(in) :: amp
     double precision intent(in) :: unitcell(3,3)
+    double precision intent(in) :: unitcell_reciproke(3,3)
+    integer intent(in) :: unitcell_active(3)
     double precision intent(inout) :: gradient(n,3)
   end function ff_bond_hyper
 
