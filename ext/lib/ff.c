@@ -31,20 +31,11 @@ inline void add_grad(int i, int j, double s, double *delta, double *gradient) {
   gradient[j*3+2] -= s*(delta[2]);
 }
 
-//should do the C equivalent of
-//return delta - self.to_cartesian(self.to_fractional(delta).round())
-//(but writing straight to memory)
 //takes locations of start and end point coordinate arrays (i and j) and location to write shortest vector array
 inline void calc_delta(double *i, double *j, double *delta, double *unitcell, double *unitcell_reciproke, int *unitcell_active)
 {
     double unit_cell[] = {1,0,0,0,2,0,0,0,1};
     double unit_cell_reciproke[] = {1,0,0,0,0.5,0,0,0,1};
-
-    /* what it should do without any active unitcells:
-    *delta = *i-*j;
-    *(delta+1) = *(i+1)-*(j+1);
-    *(delta+2) = *(i+2)-*(j+2);
-    */
 
     int p;
     for(p=0;p<3;p++)
@@ -52,28 +43,40 @@ inline void calc_delta(double *i, double *j, double *delta, double *unitcell, do
     if (*(unitcell_active+p) == 1)
         {//  minimal image convention - count distance between nearest 'images' of points
 
-            int k;
+            int k,l;
             double tmp;
-            double i_cart, j_cart, i_frac, j_frac, delta_frac;
+            double i_cart[3], j_cart[3], i_frac[3], j_frac[3], delta_frac[3];
             for(k=0;k<3;k++) // p coordinate (x,y or z) to fractional coordinates for both i and j
             {
-                i_cart = *(i+k);
-                tmp = unit_cell[p+k]*i_cart;
-                i_frac += tmp;
-                j_cart = *(j+k);
-                tmp = unit_cell[p+k]*j_cart;
-                j_frac += tmp;
+                for(l=0;l<3;l++)
+                {
+                    i_cart[l] = *(i+l);
+                    tmp = unit_cell[k+l]*i_cart[l];
+                    i_frac[k] += tmp;
+                    
+                    j_cart[l] = *(j+l);
+                    tmp = unit_cell[k+l]*j_cart[l];
+                    j_frac[k] += tmp;
+                }
             }
 
-            i_frac = i_frac - floor(i_frac);
-            j_frac = j_frac - floor(j_frac);
-
-            delta_frac = j_frac - i_frac;
-
-            //assuming orthorombic unitcell (-> diagonal matrix?) -> back to cart
-            *(delta+p) = unit_cell_reciproke[3*p+p] * (j_frac - i_frac);
+            //delta in frac coords
+            for(k=0;k<3;k++)
+            {
+                delta_frac[k] = (j_frac[k] - i_frac[k])-round(j_frac[k] - i_frac[k]);
+            }
+            
+            //delta back to cart for relevant coordinate
+            double delta_cart_p = 0;
+            for(k=0;k<3;k++) // p coordinate (x,y or z) to fractional coordinates for both i and j
+            {
+                tmp = unit_cell_reciproke[k+l]*delta_frac[k];
+                delta_cart_p += tmp;
+            }
+            
+            //write relevant delta coord to mem location
+            *(delta+p) = delta_cart_p;
              //printf("Active periodic direction - delta with min. img. convention: %f\n", delta_frac);
-
         }
         else
         {
